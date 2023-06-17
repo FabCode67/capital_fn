@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery, gql, useMutation } from '@apollo/client';
 import { BsSun, BsCheck } from 'react-icons/bs';
 import { FaTrash } from 'react-icons/fa';
@@ -33,6 +33,12 @@ const UPDATE_IS_CHECKED = gql`
     }
 `;
 
+const CLEAR_COMPLETED = gql`
+  mutation ClearCompleted {
+    clearCompleted
+  }
+`;
+
 const DELETE_TODO = gql`
     mutation DeleteTodo ($id: Int!) {
         delete(id: $id) {
@@ -48,8 +54,33 @@ const TodoList: React.FC = () => {
     const [addTodo] = useMutation(ADD_TODO);
     const [updateIsChecked] = useMutation(UPDATE_IS_CHECKED);
     const [deleteTodo] = useMutation(DELETE_TODO);
+    const [clearCompleted] = useMutation(CLEAR_COMPLETED);
     const [newTodo, setNewTodo] = useState('');
-    
+
+    const [filter, setFilter] = useState('all');
+    const [sortedTodos, setSortedTodos] = useState([]);
+
+    useEffect(() => {
+        setSortedTodos(data?.get);
+    }, [data?.get]);
+
+    useEffect(() => {
+        filterTodos();
+    }, [filter]);
+
+    const filterTodos = () => {
+        if (filter === 'all') {
+            setSortedTodos(data?.get);
+        } else if (filter === 'active') {
+            const activeTodos = data?.get.filter((todo: any) => !todo.checked);
+            setSortedTodos(activeTodos);
+        } else if (filter === 'completed') {
+            const completedTodos = data?.get.filter((todo: any) => todo.checked);
+            setSortedTodos(completedTodos);
+        }
+    };
+
+
     if (loading) return <p>Loading...</p>;
     if (error) return <p>Error :(</p>;
 
@@ -96,7 +127,33 @@ const TodoList: React.FC = () => {
             console.error(err);
         }
     };
+ 
+    const handleClearCompleted = async (): Promise<void> => {
+        try {
+          await clearCompleted({
+            refetchQueries: [{ query: GET_TODOS }],
+          });
+        } catch (err) {
+          console.error(err);
+        }
+      };
 
+    const handleFilterAll = () => {
+        setFilter('all');
+        setSortedTodos(data?.get);
+    };
+
+    const handleFilterActive = () => {
+        setFilter('active');
+        const activeTodos = data.get.filter((todo: any) => !todo.checked);
+        setSortedTodos(activeTodos);
+    };
+
+    const handleFilterCompleted = () => {
+        setFilter('completed');
+        const completedTodos = data.get.filter((todo: any) => todo.checked);
+        setSortedTodos(completedTodos);
+    };
 
 
 
@@ -104,7 +161,7 @@ const TodoList: React.FC = () => {
         <div className="c_one h-screen w-full bg-gray-500">
             <div className="c_two flex flex-col h-screen w-full  ">
                 <div className="c_three h-[30%] w-full flex items-center justify-center bg-slate-500 p-10 bg-cover bg-center">
-                    <div className="c_five m-auto flex flex-col  justify-between self-center h-[35rem] w-[35%]" style={{ zIndex: 1 }}>
+                    <div className="c_five m-auto flex flex-col  justify-between self-center h-[35rem] w-[35%] md:w-[50rem]" style={{ zIndex: 1 }}>
                         <div className="c_six flex flex-col h-[18%] w-full ">
                             <div className="c_six flex h-[50%] w-full justify-between p-2">
                                 <div className="">
@@ -137,8 +194,8 @@ const TodoList: React.FC = () => {
                                 </form>
                             </div>
                         </div>
-                        <div className="c_six flex flex-col h-[79%] w-full ">
-                            {data.get.slice().reverse().map((todo: any) => (
+                        <div className="c_six flex flex-col h-[79%] w-full">
+                            {sortedTodos?.map((todo: any) => (
                                 <div className="c_six flex justify-between w-full bg-slate-900 p-3 border-b-2 border-slate-400" key={todo.id}>
                                     <div className="flex space-x-3">
                                         <button className="text-white cursor-pointer" onClick={() => handleUpdateIsChecked(todo.id, todo.checked)}>
@@ -159,13 +216,22 @@ const TodoList: React.FC = () => {
                                     }
                                 </div>
                             ))}
-                              <div className='footer flex justify-between w-full bg-slate-900 p-3 border-b-2 border-slate-400'>
-                                    <button className="text-white cursor-pointer">{data.get.length == 0 ? 'Empty' : data.get.length <= 1 ? data.get.length + ' Item' : data.get.length + ' Itmes' }</button>
-                                    <button className="text-white cursor-pointer">All</button>
-                                    <button className="text-white cursor-pointer">Active</button>
-                                    <button className="text-white cursor-pointer">Completed</button>
-                                    <button className="text-white cursor-pointer">Clear Completed</button>
+
+                            <div className='footer flex md:flex-col justify-between w-full bg-slate-900 p-3 border-b-2 border-slate-400'>
+                                <button className="text-white cursor-pointer">{sortedTodos?.length == 0 ? 'Empty' : sortedTodos?.length <= 1 ? sortedTodos?.length + ' Item' :sortedTodos?.length + ' Itmes'}</button>
+                                <div className="flex space-x-3">
+                                <button className={`${filter == 'all' ? 'text-blue-500': 'text-white'} cursor-pointer`} onClick={handleFilterAll}>
+                                    All
+                                </button>
+                                <button className={`${filter == 'active' ? 'text-blue-500': 'text-white'} cursor-pointer`} onClick={handleFilterActive}>
+                                    Active
+                                </button>
+                                <button className={`${filter == 'completed' ? 'text-blue-500': 'text-white'} cursor-pointer`} onClick={handleFilterCompleted}>
+                                    Completed
+                                </button>
                                 </div>
+                                <button className="text-white cursor-pointer" onClick={handleClearCompleted}>Clear Completed</button>
+                            </div>
                         </div>
                     </div>
                 </div>
