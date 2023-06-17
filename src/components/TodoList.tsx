@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, gql, useMutation } from '@apollo/client';
 import { BsSun, BsCheck } from 'react-icons/bs';
+import { FaTrash } from 'react-icons/fa';
 
 const GET_TODOS = gql`
   query GetTodos {
@@ -23,8 +24,18 @@ const ADD_TODO = gql`
 `;
 
 const UPDATE_IS_CHECKED = gql`
-    mutation UpdateIsChecked($id: ID!, $checked: Boolean!) {
+    mutation UpdateIsChecked($id: Int!, $checked: Boolean!) {
         updateChecked(id: $id, checked: $checked) {
+            id
+            description
+            checked
+        }
+    }
+`;
+
+const DELETE_TODO = gql`
+    mutation DeleteTodo ($id: Int!) {
+        delete(id: $id) {
             id
             description
             checked
@@ -36,6 +47,7 @@ const TodoList: React.FC = () => {
     const { loading, error, data } = useQuery(GET_TODOS);
     const [addTodo] = useMutation(ADD_TODO);
     const [updateIsChecked] = useMutation(UPDATE_IS_CHECKED);
+    const [deleteTodo] = useMutation(DELETE_TODO);
     const [newTodo, setNewTodo] = useState('');
 
 
@@ -59,7 +71,6 @@ const TodoList: React.FC = () => {
     };
 
     const handleUpdateIsChecked = async (id: string, checked: boolean) => {
-        console.log(id, checked);
 
         try {
             await updateIsChecked({
@@ -67,14 +78,27 @@ const TodoList: React.FC = () => {
                     id,
                     checked: !checked,
                 },
-                refetchQueries: [{ query: GET_TODOS }],
             });
-            console.log('updated');
 
         } catch (err) {
             console.error(err);
         }
     };
+
+    const handleDeleteTodo = async (id: string): Promise<void> => {
+        try {
+            await deleteTodo({
+                variables: {
+                    id,
+                },
+                refetchQueries: [{ query: GET_TODOS }],
+            });
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+
 
 
     return (
@@ -115,25 +139,25 @@ const TodoList: React.FC = () => {
                             </div>
                         </div>
                         <div className="c_six flex flex-col h-[79%] w-full bg-black">
-                            {data.get.map((todo: any) => (
-                                <div className="c_six flex w-full bg-slate-900 p-3 border-b-2 border-slate-400" key={todo.id}>
+                            {data.get.slice().reverse().map((todo: any) => (
+                                <div className="c_six flex justify-between w-full bg-slate-900 p-3 border-b-2 border-slate-400" key={todo.id}>
                                     <div className="flex space-x-3">
                                         <button className="text-white cursor-pointer" onClick={() => handleUpdateIsChecked(todo.id, todo.checked)}>
-
                                             <div className="bg-slate-700 w-[20px] h-[21px] rounded-full items-center flex justify-center">
-
                                                 <div className={`w-[18px] h-[18px] rounded-full ${todo.checked ? 'bg-blue-500' : 'bg-slate-500'} m-auto flex justify-center items-center text-center`}>
                                                     {todo.checked ? <BsCheck /> : ''}
-
                                                 </div>
-
                                             </div>
                                         </button>
-
                                         <div className={`mt-[-1] text-white`}>
                                             <p className={`${todo.checked ? 'line-through' : ''}`}>{todo.description}</p>
                                         </div>
                                     </div>
+                                    {todo.checked &&
+                                        <div className='delete_button'>
+                                            <button className="cursor-pointer text-red-500" onClick={() => handleDeleteTodo(todo.id)}><FaTrash /></button>
+                                        </div>
+                                    }
                                 </div>
                             ))}
                         </div>
