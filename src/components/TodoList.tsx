@@ -49,8 +49,7 @@ const TodoList: React.FC = () => {
     const [updateIsChecked] = useMutation(UPDATE_IS_CHECKED);
     const [deleteTodo] = useMutation(DELETE_TODO);
     const [newTodo, setNewTodo] = useState('');
-
-
+    
     if (loading) return <p>Loading...</p>;
     if (error) return <p>Error :(</p>;
 
@@ -103,7 +102,7 @@ const TodoList: React.FC = () => {
 
     return (
         <div className="c_one h-screen w-full bg-gray-500">
-            <div className="c_two flex flex-col h-screen w-full  bg-slate-900">
+            <div className="c_two flex flex-col h-screen w-full  ">
                 <div className="c_three h-[30%] w-full flex items-center justify-center bg-slate-500 p-10 bg-cover bg-center">
                     <div className="c_five m-auto flex flex-col  justify-between self-center h-[35rem] w-[35%]" style={{ zIndex: 1 }}>
                         <div className="c_six flex flex-col h-[18%] w-full ">
@@ -115,9 +114,9 @@ const TodoList: React.FC = () => {
                                     <BsSun />
                                 </div>
                             </div>
-                            <div className="c_six flex h-[50%] w-full bg-slate-900 p-3">
+                            <div className="c_six flex  w-full p-3 bg-slate-900 ">
                                 <form className="flex w-full" onSubmit={handleAddTodo}>
-                                    <div className="flex space-x-3">
+                                    <div className="flex space-x-3 w-full">
                                         <div className="add_todo bg-slate-700 w-[20px] h-[21px] rounded-full items-center flex justify-center">
                                             <div className={`w-[18px] h-[18px] rounded-full todo.checked  hover:bg-blue-500 m-auto flex justify-center items-center text-center`}>
                                                 <button type="submit" className="text-white">
@@ -125,10 +124,10 @@ const TodoList: React.FC = () => {
                                                 </button>
                                             </div>
                                         </div>
-                                        <div className={`mt-[-1] text-white`}>
+                                        <div className={`mt-[-1] text-white w-full border border-1 rounded-sm  border-slate-400`}>
                                             <input
                                                 type="text"
-                                                className="w-full bg-slate-900 text-white"
+                                                className="w-full bg-slate-900 text-white px-2"
                                                 placeholder="Add a new task"
                                                 value={newTodo}
                                                 onChange={(e) => setNewTodo(e.target.value)}
@@ -138,7 +137,7 @@ const TodoList: React.FC = () => {
                                 </form>
                             </div>
                         </div>
-                        <div className="c_six flex flex-col h-[79%] w-full bg-black">
+                        <div className="c_six flex flex-col h-[79%] w-full ">
                             {data.get.slice().reverse().map((todo: any) => (
                                 <div className="c_six flex justify-between w-full bg-slate-900 p-3 border-b-2 border-slate-400" key={todo.id}>
                                     <div className="flex space-x-3">
@@ -160,6 +159,13 @@ const TodoList: React.FC = () => {
                                     }
                                 </div>
                             ))}
+                              <div className='footer flex justify-between w-full bg-slate-900 p-3 border-b-2 border-slate-400'>
+                                    <button className="text-white cursor-pointer">{data.get.length == 0 ? 'Empty' : data.get.length <= 1 ? data.get.length + ' Item' : data.get.length + ' Itmes' }</button>
+                                    <button className="text-white cursor-pointer">All</button>
+                                    <button className="text-white cursor-pointer">Active</button>
+                                    <button className="text-white cursor-pointer">Completed</button>
+                                    <button className="text-white cursor-pointer">Clear Completed</button>
+                                </div>
                         </div>
                     </div>
                 </div>
